@@ -1,0 +1,1 @@
+The Linux kernel is a Unix-like operating system kernel used by a variety of operating systems based on it, which are usually in the form of Linux distributions.The Linux kernel is a prominent example of free and open source software.
