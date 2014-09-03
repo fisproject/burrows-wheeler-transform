@@ -94,14 +94,14 @@ int main(int argc, char **argv) {
   int c;
   char *str;
   int optcode;
-  while ((c = getopt(argc, argv, "t:r:s:m:h")) != -1) {
+  while ((c = getopt(argc, argv, "t:i:s:r:h")) != -1) {
     switch (c) {
       case 't':
         printf("{optionName:%c,input_file_name:%s}\n", optopt, optarg);
         str = optarg;
         optcode = 0;
         break;
-      case 'r':
+      case 'i':
         printf("{optionName:%c,input_file_name:%s}\n", optopt, optarg);
         str = optarg;
         optcode = 1;
@@ -111,7 +111,7 @@ int main(int argc, char **argv) {
         str = optarg;
         optcode = 2;
         break;
-      case 'm':
+      case 'r':
         printf("%c-option, input-stream:%s \n", optopt, optarg);
         str = optarg;
         optcode = 3;

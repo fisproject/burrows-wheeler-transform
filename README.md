@@ -18,7 +18,7 @@ move-to-front in c
 ## Example
 $ ./bwt -t ../test/linuxkernel.txt 
 
-$ ./bwt -i ../test/linuxkernel.txt 
+$ ./bwt -i ../test/linuxkernel_sa.txt 
 
 ## Author
 [fisproject](https://github.com/fisproject)
