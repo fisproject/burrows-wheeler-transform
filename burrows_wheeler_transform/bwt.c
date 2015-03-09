@@ -9,12 +9,14 @@
 #include <errno.h>
 
 #define MAX_LEN 2048
-#define FILE_LEN 8192
+#define MAX_FILE_LEN 8192
 
-/*
-*  Pair
-*
-*/
+static int mode_bwt_file;
+static int mode_ibwt_file;
+static int mode_bwt_stream;
+static int mode_ibwt_stream;
+static int show_version;
+
 typedef struct {
   int num;
   char str[MAX_LEN];
@@ -55,7 +57,7 @@ const char *create_suffix_array(char *str, int len) {
     }
     strs[j] = tmp;
 
-    printf("%d : [%s]\n", p[i].num, p[i].str);
+    printf("{num: %d, char: '%s'\n", p[i].num, p[i].str);
   }
 
   printf("-- Quick Sort --\n");
@@ -68,7 +70,7 @@ const char *create_suffix_array(char *str, int len) {
   memset(SA, 0, sizeof(SA));
 
   for (int i = 0; i < len + 1; i++) {
-    printf("%d [%s]\n", p[i].num, p[i].str);
+    printf("{num: %d, char: '%s'}\n", p[i].num, p[i].str);
     const char *ptr = &p[i].str[len];
     const char *preptr;
 
@@ -88,8 +90,8 @@ const char *create_suffix_array(char *str, int len) {
     }
   }
 
-  const char *_SA = &SA[0];
-  return _SA;
+  const char *s = &SA[0];
+  return s;
 }
 
 /*
@@ -112,7 +114,7 @@ const char *create_inverse_suffix_array(char *str, int len) {
     const char *s = &a;
     strcpy(p[i].str, s);
 
-    printf("{num: %d,str: %c}\n", p[i].num, a);
+    printf("{num: %d, char: %c}\n", p[i].num, a);
   }
 
   printf("-- Quick Sort --\n");
@@ -137,98 +139,109 @@ const char *create_inverse_suffix_array(char *str, int len) {
 
   for (int i = 0, index = first; i < len; i++) {
     ary[i] = p[index].str[0];
-    printf("{num: %d,str: %c}\n", p[index].num, p[index].str[0]);
+    printf("{num: %d, char: %c}\n", p[index].num, p[index].str[0]);
     index = p[index].num;
   }
 
-  const char *_SA = &ary[0];
-  return _SA;
+  const char *s = &ary[0];
+  return s;
 }
 
 /*
-*　Usage
-*  -t :  Burrows-Wheeler transform
-*  -i :  Inverse Burrows-Wheeler transform
-*  -h :  show help
+* get_options
+*
 */
-int main(int argc, char **argv) {
+char *get_options(int argc, char *const *argv) {
   int c;
-  char *str;
-  int optcode;
   while ((c = getopt(argc, argv, "t:i:s:r:h")) != -1) {
     switch (c) {
       case 't':
-        printf("{optionName:%c,input_file_name:%s}\n", optopt, optarg);
-        str = optarg;
-        optcode = 0;
-        break;
+        printf("{option: %c, input_file: %s}\n", optopt, optarg);
+        mode_bwt_file = 1;
+        return optarg;
+
       case 'i':
-        printf("{optionName:%c,input_file_name:%s}\n", optopt, optarg);
-        str = optarg;
-        optcode = 1;
-        break;
+        printf("{option: %c, input_file: %s}\n", optopt, optarg);
+        mode_ibwt_file = 1;
+        return optarg;
+
       case 's':
-        printf("{optionName:%c,input_stream:%s}\n", optopt, optarg);
-        str = optarg;
-        optcode = 2;
-        break;
+        printf("{option: %c, input_stream: %s}\n", optopt, optarg);
+        mode_bwt_stream = 1;
+        return optarg;
+
       case 'r':
-        printf("{optionName:%c,input_stream:%s}\n", optopt, optarg);
-        str = optarg;
-        optcode = 3;
-        break;
+        printf("{option: %c, input_stream: %s}\n", optopt, optarg);
+        mode_ibwt_stream = 1;
+        return optarg;
+
       case 'h':
-        printf("Usage\n");
-        printf("-t :  Burrows-Wheeler transform\n");
-        printf("-i :  Inverse Burrows-Wheeler transform\n");
-        break;
+        show_version = 1;
+        return "show_help";
+
       default:
-        printf("invalid option\n");
-        break;
+        return NULL;
     }
   }
-  if (str == NULL) {
-    printf("arguments required\n");
-    return 0;
+  return NULL;
+}
+
+/*
+* main
+*
+*/
+int main(int argc, char **argv) {
+  // Parse options
+  char *input = get_options(argc, argv);
+  if (input == NULL) {
+    printf("[Error] Input file or stream required.\n");
+    return 1;
   }
 
   // Read File
   FILE *fp;
-  char s[FILE_LEN];
+  char s[MAX_FILE_LEN];
   int len;
+  const char *SA;
 
-  if (optcode == 0 || optcode == 1) {
-    if ((fp = fopen(str, "r")) == NULL) {
-      printf("errno %d\n", errno);
-      return 0;
+  if (mode_bwt_file || mode_ibwt_file) {
+    if ((fp = fopen(input, "r")) == NULL) {
+      printf("[Error] errno %d\n", errno);
+      return errno;
     }
-    while (fgets(s, FILE_LEN, fp) != NULL) {
+    while (fgets(s, MAX_FILE_LEN, fp) != NULL) {
       len = strlen(s);
-      printf("{fileInput:%s,fileLength:%d}\n", s, len);
+      printf("{input: %s, length: %d}\n", s, len);
     }
     fclose(fp);
   }
 
-  const char *SA;
-  switch (optcode) {
-    case 0:  // BWT
-      SA = create_suffix_array(s, len);
-      break;
-    case 1:  // RBWT
-      SA = create_inverse_suffix_array(s, len);
-      break;
-    case 2:
-      len = strlen(str);
-      SA = create_suffix_array(str, len);
-      break;
-    case 3:
-      len = strlen(str);
-      SA = create_inverse_suffix_array(str, len);
-      break;
+  if (show_version) {
+    printf("\nOptions:\n");
+    printf("  -t :  Burrows-Wheeler transform. Input File.\n");
+    printf("  -i :  Inverse Burrows-Wheeler transform. Input File.\n");
+    printf("  -s :  Burrows-Wheeler transform. Input Stream.\n");
+    printf("  -r :  Inverse Burrows-Wheeler transform. Input Stream.\n");
+    printf("  -h :  Show Help.\n");
+    return 0;
   }
 
-  printf("-- Result --\n");
-  printf("%s\n", SA);
+  if (mode_bwt_file) {
+    SA = create_suffix_array(s, len);
+  }
 
+  if (mode_ibwt_file) {
+    SA = create_inverse_suffix_array(s, len);
+  }
+
+  if (mode_bwt_stream) {
+    SA = create_suffix_array(input, strlen(input));
+  }
+
+  if (mode_ibwt_stream) {
+    SA = create_inverse_suffix_array(input, strlen(input));
+  }
+
+  printf("-- Result --\n%s\n", SA);
   return 0;
 }
