@@ -234,8 +234,7 @@ int main(int argc, char **argv) {
   }
 
   if (show_version) {
-    printf("\nVersion:\n");
-    printf("%s\n", VERSION);
+    printf("\nVersion:\n%s\n", VERSION);
     return 0;
   }
 
