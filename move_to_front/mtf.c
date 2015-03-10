@@ -8,8 +8,16 @@
 #include <getopt.h>
 #include <errno.h>
 
-#define FILE_LEN 1024
-#define BUF_SIZE 1024
+#define VERSION "0.0.1"
+#define MAX_FILE_LEN 1024
+#define MAX_BUF_SIZE 1024
+
+static int mode_mtf_file;
+static int mode_imtf_file;
+static int mode_mtf_stream;
+static int mode_imtf_stream;
+static int show_version;
+static int show_help;
 
 /*
 * move_to_front
@@ -61,13 +69,13 @@ const char *move_to_front_transform(char *str, int len) {
   int retLen = strlen(strList);
 
   printf("-- Converting --\n");
-  char MTF[BUF_SIZE];
+  char MTF[MAX_BUF_SIZE];
   memset(MTF, 0, sizeof(MTF));
   count = 0;
 
   for (int i = 0; i < len; i++) {
     char a = str[i];
-    printf("search -> [%c] listState -> [%s]\n", a, strList);
+    printf("search -> [%c] state -> [%s]\n", a, strList);
 
     for (int j = 0; j < retLen; j++) {
       if (strList[j] == a) {
@@ -80,92 +88,117 @@ const char *move_to_front_transform(char *str, int len) {
     }
   }
 
-  const char *_MTF = MTF;
-  return _MTF;
+  const char *m = MTF;
+  return m;
 }
 
 /*
-*　Usage
-*  -t :  Move_to_front Transform
-*  -i :  Inverse Move_to_front Transform
-*  -h :  show help
+* get_options
+*
 */
-int main(int argc, char **argv) {
+char *get_options(int argc, char *const *argv) {
   int c;
-  char *str;
-  int optcode;
-  while ((c = getopt(argc, argv, "t:i:s:r:h")) != -1) {
+  while ((c = getopt(argc, argv, "t:i:s:r:vh")) != -1) {
     switch (c) {
       case 't':
-        printf("{optionName:%c,input_file_name:%s}\n", optopt, optarg);
-        str = optarg;
-        optcode = 0;
-        break;
+        printf("{option: '%c', mode: 'Move_to_front', input_file: '%s'}\n", optopt, optarg);
+        mode_mtf_file = 1;
+        return optarg;
+
       case 'i':
-        printf("{optionName:%c,input_file_name:%s}\n", optopt, optarg);
-        str = optarg;
-        optcode = 1;
-        break;
+        printf("{option: '%c', mode: 'Inverse Move_to_front', input_file: '%s'}\n", optopt, optarg);
+        mode_imtf_file = 1;
+        return optarg;
+
       case 's':
-        printf("%c-option, input-stream:%s \n", optopt, optarg);
-        str = optarg;
-        optcode = 2;
-        break;
+        printf("{option: '%c', mode: 'Move_to_front', input_stream: '%s'}\n", optopt, optarg);
+        mode_mtf_stream = 1;
+        return optarg;
+
       case 'r':
-        printf("%c-option, input-stream:%s \n", optopt, optarg);
-        str = optarg;
-        optcode = 3;
-        break;
+        printf("{option: '%c', mode: 'Inverse Move_to_front', input_stream: '%s'}\n", optopt, optarg);
+        mode_imtf_stream = 1;
+        return optarg;
+
+      case 'v':
+        show_version = 1;
+        return "show_version";
+
       case 'h':
-        printf("Usage\n");
-        printf("-t :  Move_to_front Transform\n");
-        printf("-i :  Inverse Move_to_front Transform\n");
-        break;
+        show_help = 1;
+        return "show_help";
+
       default:
-        printf("invalid option\n");
-        break;
+        return NULL;
     }
   }
-  if (str == NULL) {
-    printf("arguments required\n");
-    return 0;
+  return NULL;
+}
+
+/*
+* Main
+*
+*/
+int main(int argc, char **argv) {
+  // Parse options
+  char *input = get_options(argc, argv);
+  if (input == NULL) {
+    printf("[Error] Input file or stream required.\n");
+    return 1;
   }
 
+  // Read File
   FILE *fp;
-  char s[FILE_LEN];
+  char s[MAX_FILE_LEN];
   int len;
+  const char *ret;
 
-  if (optcode == 0 || optcode == 1) {
-    if ((fp = fopen(str, "r")) == NULL) {
-      printf("errno %d\n", errno);
-      return 0;
+  if (mode_mtf_file || mode_imtf_file) {
+    if ((fp = fopen(input, "r")) == NULL) {
+      printf("[Error] errno %d\n", errno);
+      return errno;
     }
-    while (fgets(s, FILE_LEN, fp) != NULL) {
+    while (fgets(s, MAX_FILE_LEN, fp) != NULL) {
       len = strlen(s);
-      printf("{fileInput:%s,fileLength:%d}\n", s, len);
+      printf("{input: %s, length: %d}\n", s, len);
     }
     fclose(fp);
   }
 
-  const char *ret;
-
-  switch (optcode) {
-    case 0:  // MFT
-      ret = move_to_front_transform(s, len);
-      break;
-    case 1:  // IMFT
-      // ret = create_inverse_suffix_array(s,len);
-      break;
-    case 2:
-      len = strlen(str);
-      // ret = create_suffix_array(str,len);
-      break;
-    case 3:
-      len = strlen(str);
-      // ret = create_inverse_suffix_array(str,len);
-      break;
+  if (show_help) {
+    printf("\nOptions:\n");
+    printf("  -t :  Move_to_front. Input File.\n");
+    printf("  -i :  Inverse Move_to_front. Input File.\n");
+    printf("  -s :  Move_to_front. Input Stream.\n");
+    printf("  -r :  Inverse Move_to_front. Input Stream.\n");
+    printf("  -v :  Show Version.\n");
+    printf("  -h :  Show Help.\n");
+    return 0;
   }
 
-  printf("-- Result --\n");
-  printf("%s\n", ret);
+  if (show_version) {
+    printf("\nVersion:\n%s\n", VERSION);
+    return 0;
+  }
+
+  if (mode_mtf_file) {
+    ret = move_to_front_transform(s, len);
+  }
+
+  if (mode_imtf_file) {
+    // WIP
+    // ret = create_inverse_suffix_array(s,len);
+  }
+
+  if (mode_mtf_stream) {
+    ret = move_to_front_transform(input, strlen(input));
+  }
+
+  if (mode_imtf_stream) {
+    // WIP
+    // ret = create_inverse_suffix_array(input, strlen(input));
+  }
+
+  printf("-- Result --\n%s\n", ret);
+  return 0;
 }

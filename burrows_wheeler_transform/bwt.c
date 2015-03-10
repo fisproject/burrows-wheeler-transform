@@ -8,6 +8,7 @@
 #include <getopt.h>
 #include <errno.h>
 
+#define VERSION "0.0.1"
 #define MAX_LEN 2048
 #define MAX_FILE_LEN 8192
 
@@ -16,6 +17,7 @@ static int mode_ibwt_file;
 static int mode_bwt_stream;
 static int mode_ibwt_stream;
 static int show_version;
+static int show_help;
 
 typedef struct {
   int num;
@@ -153,30 +155,34 @@ const char *create_inverse_suffix_array(char *str, int len) {
 */
 char *get_options(int argc, char *const *argv) {
   int c;
-  while ((c = getopt(argc, argv, "t:i:s:r:h")) != -1) {
+  while ((c = getopt(argc, argv, "t:i:s:r:vh")) != -1) {
     switch (c) {
       case 't':
-        printf("{option: %c, input_file: %s}\n", optopt, optarg);
+        printf("{option: '%c', mode: 'Burrows-Wheeler Transform', input_file: '%s'}\n", optopt, optarg);
         mode_bwt_file = 1;
         return optarg;
 
       case 'i':
-        printf("{option: %c, input_file: %s}\n", optopt, optarg);
+        printf("{option: '%c', mode: 'Inverse Burrows-Wheeler Transform', input_file: '%s'}\n", optopt, optarg);
         mode_ibwt_file = 1;
         return optarg;
 
       case 's':
-        printf("{option: %c, input_stream: %s}\n", optopt, optarg);
+        printf("{option: '%c', mode: 'Burrows-Wheeler Transform', input_stream: '%s'}\n", optopt, optarg);
         mode_bwt_stream = 1;
         return optarg;
 
       case 'r':
-        printf("{option: %c, input_stream: %s}\n", optopt, optarg);
+        printf("{option: '%c', mode: 'Inverse Burrows-Wheeler Transform', input_stream: '%s'}\n", optopt, optarg);
         mode_ibwt_stream = 1;
         return optarg;
 
-      case 'h':
+      case 'v':
         show_version = 1;
+        return "show_version";
+
+      case 'h':
+        show_help = 1;
         return "show_help";
 
       default:
@@ -216,13 +222,20 @@ int main(int argc, char **argv) {
     fclose(fp);
   }
 
-  if (show_version) {
+  if (show_help) {
     printf("\nOptions:\n");
-    printf("  -t :  Burrows-Wheeler transform. Input File.\n");
-    printf("  -i :  Inverse Burrows-Wheeler transform. Input File.\n");
-    printf("  -s :  Burrows-Wheeler transform. Input Stream.\n");
-    printf("  -r :  Inverse Burrows-Wheeler transform. Input Stream.\n");
+    printf("  -t :  Burrows-Wheeler Transform. Input File.\n");
+    printf("  -i :  Inverse Burrows-Wheeler Transform. Input File.\n");
+    printf("  -s :  Burrows-Wheeler Transform. Input Stream.\n");
+    printf("  -r :  Inverse Burrows-Wheeler Transform. Input Stream.\n");
+    printf("  -v :  Show Version.\n");
     printf("  -h :  Show Help.\n");
+    return 0;
+  }
+
+  if (show_version) {
+    printf("\nVersion:\n");
+    printf("%s\n", VERSION);
     return 0;
   }
 
