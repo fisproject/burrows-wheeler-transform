@@ -23,73 +23,49 @@ static int show_help;
 * move_to_front
 *
 */
-int *move_to_front(char *list, int point) {
-  int len = strlen(list);
-  char tmp;
-
-  tmp = list[point];
-  for (int i = point; i > 0; i--) {
-    list[i] = list[i - 1];
-  }
-  list[0] = tmp;
-
-  return 0;
+int move_to_front(char *str, char c) {
+  char *q, *p;
+  int shift = 0;
+  p = (char *)malloc(strlen(str) + 1);
+  strcpy(p, str);
+  q = strchr(p, c);  // returns pointer to location of char c in string str
+  shift = q - p;  // no of characters from 0 to position of c in str
+  strncpy(str + 1, p, shift);
+  str[0] = c;
+  free(p);
+  return shift;
 }
 
 /*
-* move_to_front_transform
+* decode
 *
 */
-const char *move_to_front_transform(char *str, int len) {
-  char strList[len];
-  memset(strList, 0, sizeof(strList));
-  int count = 0;
+void decode(int *pass, int size, char *sym) {
+  int index;
+  char c;
+  char table[] = "abcdefghijklmnopqrstuvwxyz";
 
-  printf("-- Create Char List --\n");
-  for (int i = 0; i < len; i++) {
-    char a = str[i];
-    // printf("%d->%c\n", i,a);
-
-    if (i == 0) {
-      strList[count] = a;
-      count++;
-    }
-    for (int j = 0; j < i; j++) {
-      if (strList[j] == a) break;
-
-      if (j == i - 1) {
-        strList[count] = a;
-        count++;
-        break;
-      }
-    }
+  for (int i = 0; i < size; i++) {
+    c = table[pass[i]];
+    index = move_to_front(table, c);
+    if (pass[i] != index) printf("there is an error");
+    sym[i] = c;
   }
+  sym[size] = '\0';
+}
 
-  printf("charList -> [%s]\n", strList);
-  int retLen = strlen(strList);
+/*
+* encode
+*
+*/
+void encode(char *sym, int size, int *pass) {
+  char c;
+  char table[] = "abcdefghijklmnopqrstuvwxyz";
 
-  printf("-- Converting --\n");
-  char MTF[MAX_BUF_SIZE];
-  memset(MTF, 0, sizeof(MTF));
-  count = 0;
-
-  for (int i = 0; i < len; i++) {
-    char a = str[i];
-    printf("search -> [%c] state -> [%s]\n", a, strList);
-
-    for (int j = 0; j < retLen; j++) {
-      if (strList[j] == a) {
-        // ascii  a -> 65
-        sprintf(MTF, "%s %d", MTF, j);
-        move_to_front(strList, j);
-        count++;
-        break;
-      }
-    }
+  for (int i = 0; i < size; i++) {
+    c = sym[i];
+    pass[i] = move_to_front(table, c);
   }
-
-  const char *m = MTF;
-  return m;
 }
 
 /*
@@ -151,6 +127,7 @@ int main(int argc, char **argv) {
   FILE *fp;
   char s[MAX_FILE_LEN];
   int len;
+  int pass[MAX_BUF_SIZE] = {0};
   const char *ret;
 
   if (mode_mtf_file || mode_imtf_file) {
@@ -159,6 +136,7 @@ int main(int argc, char **argv) {
       return errno;
     }
     while (fgets(s, MAX_FILE_LEN, fp) != NULL) {
+      s[strlen(s) - 1] = '\0';
       len = strlen(s);
       printf("{input: %s, length: %d}\n", s, len);
     }
@@ -182,23 +160,24 @@ int main(int argc, char **argv) {
   }
 
   if (mode_mtf_file) {
-    ret = move_to_front_transform(s, len);
+    encode(s, len, pass);
+    for (int j = 0; j < len; j++) printf("%d ", pass[j]);
+    printf("\n");
   }
 
   if (mode_imtf_file) {
-    // WIP
-    // ret = create_inverse_suffix_array(s,len);
+    // TODO
   }
 
   if (mode_mtf_stream) {
-    ret = move_to_front_transform(input, strlen(input));
+    encode(input, strlen(input), pass);
+    for (int j = 0; j < strlen(input); j++) printf("%d ", pass[j]);
+    printf("\n");
   }
 
   if (mode_imtf_stream) {
-    // WIP
-    // ret = create_inverse_suffix_array(input, strlen(input));
+    // TODO
   }
 
-  printf("-- Result --\n%s\n", ret);
   return 0;
 }
