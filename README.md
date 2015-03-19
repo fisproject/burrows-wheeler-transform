@@ -42,9 +42,11 @@ $ ./bwt -t ../examples/linuxkernel.txt
 $ ./bwt -i ../examples/linuxkernel_sa.txt
 
 $ ./mtf -t ../examples/mtf.txt
+
 1 17 15 0 0 5
 
 $ ./mtf -s broood
+
 1 17 15 0 0 5
 
 ## Author

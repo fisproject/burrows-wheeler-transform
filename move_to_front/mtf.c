@@ -1,5 +1,5 @@
 /*
-* String search using the Move-To-Front in C
+* Move-to-front algorithm in C
 *
 */
 #include <stdio.h>
