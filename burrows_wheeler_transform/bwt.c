@@ -146,43 +146,43 @@ static void create_inverse_suffix_array(char *str, int len, char *SA) {
 * get_options
 *
 */
-char *get_options(int argc, char *const *argv) {
+static int get_options(int argc, char *const *argv) {
   int c;
   while ((c = getopt(argc, argv, "t:i:s:r:vh")) != -1) {
     switch (c) {
       case 't':
         printf("{option: '%c', mode: 'Burrows-Wheeler Transform', input_file: '%s'}\n", optopt, optarg);
         mode_bwt_file = 1;
-        return optarg;
+        return 0;
 
       case 'i':
         printf("{option: '%c', mode: 'Inverse Burrows-Wheeler Transform', input_file: '%s'}\n", optopt, optarg);
         mode_ibwt_file = 1;
-        return optarg;
+        return 0;
 
       case 's':
         printf("{option: '%c', mode: 'Burrows-Wheeler Transform', input_stream: '%s'}\n", optopt, optarg);
         mode_bwt_stream = 1;
-        return optarg;
+        return 0;
 
       case 'r':
         printf("{option: '%c', mode: 'Inverse Burrows-Wheeler Transform', input_stream: '%s'}\n", optopt, optarg);
         mode_ibwt_stream = 1;
-        return optarg;
+        return 0;
 
       case 'v':
         show_version = 1;
-        return "show_version";
+        return 0;
 
       case 'h':
         show_help = 1;
-        return "show_help";
+        return 0;
 
       default:
-        return NULL;
+      return -1;
     }
   }
-  return NULL;
+  return -2;
 }
 
 /*
@@ -191,9 +191,8 @@ char *get_options(int argc, char *const *argv) {
 */
 int main(int argc, char **argv) {
   // Parse options
-  char *input = get_options(argc, argv);
-  if (input == NULL) {
-    printf("[Error] Input file or stream required.\n");
+  if (get_options(argc, argv) != 0) {
+    printf("[Error] invalid option.\n");
     return 1;
   }
 
@@ -203,7 +202,7 @@ int main(int argc, char **argv) {
   int len;
 
   if (mode_bwt_file || mode_ibwt_file) {
-    if ((fp = fopen(input, "r")) == NULL) {
+    if ((fp = fopen(optarg, "r")) == NULL) {
       printf("[Error] errno %d\n", errno);
       return errno;
     }
@@ -242,11 +241,11 @@ int main(int argc, char **argv) {
   }
 
   if (mode_bwt_stream) {
-    create_suffix_array(input, strlen(input), SA);
+    create_suffix_array(optarg, strlen(optarg), SA);
   }
 
   if (mode_ibwt_stream) {
-    create_inverse_suffix_array(input, strlen(input), SA);
+    create_inverse_suffix_array(optarg, strlen(optarg), SA);
   }
 
   printf("-- Result --\n%s\n", SA);
