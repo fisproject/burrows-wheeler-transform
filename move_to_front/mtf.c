@@ -26,6 +26,7 @@ static int show_help;
 int move_to_front(char *str, char c) {
   char *q, *p;
   int shift = 0;
+
   p = (char *)malloc(strlen(str) + 1);
   strcpy(p, str);
   q = strchr(p, c);  // returns pointer to location of char c in string str
@@ -33,6 +34,7 @@ int move_to_front(char *str, char c) {
   strncpy(str + 1, p, shift);
   str[0] = c;
   free(p);
+
   return shift;
 }
 
@@ -72,43 +74,43 @@ void encode(char *sym, int size, int *pass) {
 * get_options
 *
 */
-char *get_options(int argc, char *const *argv) {
+static int get_options(int argc, char *const *argv) {
   int c;
   while ((c = getopt(argc, argv, "t:i:s:r:vh")) != -1) {
     switch (c) {
       case 't':
         printf("{option: '%c', mode: 'Move_to_front', input_file: '%s'}\n", optopt, optarg);
         mode_mtf_file = 1;
-        return optarg;
+        return 0;
 
       case 'i':
         printf("{option: '%c', mode: 'Inverse Move_to_front', input_file: '%s'}\n", optopt, optarg);
         mode_imtf_file = 1;
-        return optarg;
+        return 0;
 
       case 's':
         printf("{option: '%c', mode: 'Move_to_front', input_stream: '%s'}\n", optopt, optarg);
         mode_mtf_stream = 1;
-        return optarg;
+        return 0;
 
       case 'r':
         printf("{option: '%c', mode: 'Inverse Move_to_front', input_stream: '%s'}\n", optopt, optarg);
         mode_imtf_stream = 1;
-        return optarg;
+        return 0;
 
       case 'v':
         show_version = 1;
-        return "show_version";
+        return 0;
 
       case 'h':
         show_help = 1;
-        return "show_help";
+        return 0;
 
       default:
-        return NULL;
+        return -1;
     }
   }
-  return NULL;
+  return -2;
 }
 
 /*
@@ -117,9 +119,8 @@ char *get_options(int argc, char *const *argv) {
 */
 int main(int argc, char **argv) {
   // Parse options
-  char *input = get_options(argc, argv);
-  if (input == NULL) {
-    printf("[Error] Input file or stream required.\n");
+  if (get_options(argc, argv) != 0) {
+    printf("[Error] invalid option.\n");
     return 1;
   }
 
@@ -128,10 +129,9 @@ int main(int argc, char **argv) {
   char s[MAX_FILE_LEN];
   int len;
   int pass[MAX_BUF_SIZE] = {0};
-  const char *ret;
 
   if (mode_mtf_file || mode_imtf_file) {
-    if ((fp = fopen(input, "r")) == NULL) {
+    if ((fp = fopen(optarg, "r")) == NULL) {
       printf("[Error] errno %d\n", errno);
       return errno;
     }
@@ -161,7 +161,9 @@ int main(int argc, char **argv) {
 
   if (mode_mtf_file) {
     encode(s, len, pass);
-    for (int j = 0; j < len; j++) printf("%d ", pass[j]);
+    for (int j = 0; j < len; j++) {
+      printf("%d ", pass[j]);
+    }
     printf("\n");
   }
 
@@ -170,8 +172,10 @@ int main(int argc, char **argv) {
   }
 
   if (mode_mtf_stream) {
-    encode(input, strlen(input), pass);
-    for (int j = 0; j < strlen(input); j++) printf("%d ", pass[j]);
+    encode(optarg, strlen(optarg), pass);
+    for (int j = 0; j < strlen(optarg); j++) {
+      printf("%d ", pass[j]);
+    }
     printf("\n");
   }
 

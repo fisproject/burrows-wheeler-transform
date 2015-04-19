@@ -46,7 +46,7 @@ $ ./bwt -i ../examples/linuxkernel_sa.txt
 ```
 
 ```
-$ ./mtf -t ../examples/mtf.txt
+$ ./mtf -t ../examples/mtf_example.txt
 1 17 15 0 0 5
 ```
 

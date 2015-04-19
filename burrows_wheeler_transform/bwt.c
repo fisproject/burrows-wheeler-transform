@@ -37,7 +37,7 @@ int compare(const void *x, const void *y) {
 * create_suffix_array
 *
 */
-const char *create_suffix_array(char *str, int len) {
+static void create_suffix_array(char *str, int len, char *SA) {
   // add $ -> len+1
   Pair p[len + 1];
   char strs[len + 1];
@@ -68,8 +68,6 @@ const char *create_suffix_array(char *str, int len) {
 
   // create suffix array
   printf("-- After Sort --\n");
-  char SA[len];
-  memset(SA, 0, sizeof(SA));
 
   for (int i = 0; i < len + 1; i++) {
     printf("{num: %d, char: '%s'}\n", p[i].num, p[i].str);
@@ -91,16 +89,13 @@ const char *create_suffix_array(char *str, int len) {
       sprintf(SA, "%s%c", SA, p[i].str[len]);
     }
   }
-
-  const char *s = &SA[0];
-  return s;
 }
 
 /*
-* create_inverse_suffix_array
+* TODO : create_inverse_suffix_array
 *
 */
-const char *create_inverse_suffix_array(char *str, int len) {
+static void create_inverse_suffix_array(char *str, int len, char *SA) {
   printf("-- starting --\n");
   Pair p[len];
   char strs[len];
@@ -108,7 +103,6 @@ const char *create_inverse_suffix_array(char *str, int len) {
   char tmp;
 
   // create_char_pair
-  // 一文字ずつペア
   printf("-- Before Sort --\n");
   for (int i = 0; i < len; i++) {
     p[i].num = i;
@@ -124,10 +118,6 @@ const char *create_inverse_suffix_array(char *str, int len) {
 
   // create suffix array
   printf("-- After Sort --\n");
-  char SA[len];
-  memset(SA, 0, sizeof(SA));
-
-  char ary[len];
   int index, first = 0;
 
   // get index
@@ -140,13 +130,16 @@ const char *create_inverse_suffix_array(char *str, int len) {
   }
 
   for (int i = 0, index = first; i < len; i++) {
-    ary[i] = p[index].str[0];
+    SA[i] = p[index].str[0];
     printf("{num: %d, char: %c}\n", p[index].num, p[index].str[0]);
     index = p[index].num;
-  }
 
-  const char *s = &ary[0];
-  return s;
+    if (SA == NULL) {
+      sprintf(SA, "%c", p[i].str[len]);
+    } else {
+      sprintf(SA, "%s%c", SA, p[i].str[len]);
+    }
+  }
 }
 
 /*
@@ -208,7 +201,6 @@ int main(int argc, char **argv) {
   FILE *fp;
   char s[MAX_FILE_LEN];
   int len;
-  const char *SA;
 
   if (mode_bwt_file || mode_ibwt_file) {
     if ((fp = fopen(input, "r")) == NULL) {
@@ -221,6 +213,9 @@ int main(int argc, char **argv) {
     }
     fclose(fp);
   }
+
+  char SA[len];
+  memset(&SA, 0, sizeof(SA));
 
   if (show_help) {
     printf("\nOptions:\n");
@@ -239,19 +234,19 @@ int main(int argc, char **argv) {
   }
 
   if (mode_bwt_file) {
-    SA = create_suffix_array(s, len);
+    create_suffix_array(s, len, SA);
   }
 
   if (mode_ibwt_file) {
-    SA = create_inverse_suffix_array(s, len);
+    create_inverse_suffix_array(s, len, SA);
   }
 
   if (mode_bwt_stream) {
-    SA = create_suffix_array(input, strlen(input));
+    create_suffix_array(input, strlen(input), SA);
   }
 
   if (mode_ibwt_stream) {
-    SA = create_inverse_suffix_array(input, strlen(input));
+    create_inverse_suffix_array(input, strlen(input), SA);
   }
 
   printf("-- Result --\n%s\n", SA);
